@@ -1,0 +1,96 @@
+name: TradingView Watchlist Monitor
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Scan mode"
+        required: true
+        default: "always"
+        type: choice
+        options:
+          - always
+          - market
+          - offhours
+  schedule:
+    # Market scanner: every 15 minutes around possible US regular hours.
+    # The Python script checks America/New_York time and skips outside 09:30-16:00.
+    - cron: "*/15 13-21 * * 1-5"
+    # Off-hours scanner: every 30 minutes. The script skips while US regular market is open.
+    - cron: "7,37 * * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tradingview-watchlist-monitor
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    env:
+      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+      WATCHLIST_NAME: 黄哥的观察
+      WATCHLIST_URL: https://www.tradingview.com/watchlists/326877343/
+      STATE_FILE: state/watchlist_326877343.json
+      MARKET_TIMEZONE: America/New_York
+      MARKET_OPEN: "09:30"
+      MARKET_CLOSE: "16:00"
+      HEADLESS: "true"
+      SEND_INITIAL_BASELINE: "false"
+      PERSIST_LAST_SEEN: "false"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Cache Playwright Chromium
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+          python -m playwright install --with-deps chromium
+
+      - name: Select schedule mode
+        id: mode
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "mode=${{ inputs.mode }}" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ github.event.schedule }}" == "*/15 13-21 * * 1-5" ]]; then
+            echo "mode=market" >> "$GITHUB_OUTPUT"
+          else
+            echo "mode=offhours" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run watcher
+        run: python -m tv_watchlist_discord.watcher run-scheduled --mode "${{ steps.mode.outputs.mode }}"
+
+      - name: Commit state changes
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add state/watchlist_326877343.json
+          if git diff --cached --quiet; then
+            echo "No state changes to commit."
+          else
+            git commit -m "Update TradingView watchlist state"
+            git push
+          fi

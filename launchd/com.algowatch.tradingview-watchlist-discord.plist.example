@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.algowatch.tradingview-watchlist-discord</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/lizhi/Documents/AlgoTrading/tradingview-watchlist-discord/.venv/bin/python</string>
+    <string>-m</string>
+    <string>tv_watchlist_discord.watcher</string>
+    <string>daemon</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/lizhi/Documents/AlgoTrading/tradingview-watchlist-discord</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>WATCHLIST_NAME</key>
+    <string>黄哥的观察</string>
+    <key>WATCHLIST_URL</key>
+    <string>https://www.tradingview.com/watchlists/326877343/</string>
+    <key>STATE_FILE</key>
+    <string>state/watchlist_326877343.json</string>
+    <key>MARKET_TIMEZONE</key>
+    <string>America/New_York</string>
+    <key>MARKET_OPEN</key>
+    <string>09:30</string>
+    <key>MARKET_CLOSE</key>
+    <string>16:00</string>
+    <key>CHECK_INTERVAL_MARKET_SECONDS</key>
+    <string>900</string>
+    <key>CHECK_INTERVAL_OFFHOURS_SECONDS</key>
+    <string>1800</string>
+    <key>HEADLESS</key>
+    <string>true</string>
+    <key>DISCORD_WEBHOOK_URL</key>
+    <string>PASTE_DISCORD_WEBHOOK_URL_HERE</string>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/lizhi/Documents/AlgoTrading/tradingview-watchlist-discord/state/launchd.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/lizhi/Documents/AlgoTrading/tradingview-watchlist-discord/state/launchd.err.log</string>
+</dict>
+</plist>
