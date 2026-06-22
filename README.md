@@ -16,8 +16,8 @@ TradingView does not provide an official webhook for public watchlist membership
 - Shows added/removed counts at the top of every message, even when the count is zero.
 - Lists changed tickers by TradingView section/category.
 - Shows plain tickers in notifications while comparing exchange-qualified symbols internally.
-- Sends the full watchlist at market open, market close, and the daily snapshot hour.
-- Runs locally as a daemon or in GitHub Actions on a schedule.
+- Sends the full watchlist at market open and market close.
+- Runs on a GitHub Actions schedule.
 
 ## Example Message
 
@@ -98,8 +98,8 @@ Edit `.env` and configure your notifier.
 | `MARKET_CLOSE` | `16:00` | Regular-session close time. |
 | `CHECK_INTERVAL_MARKET_SECONDS` | `900` | Local daemon scan interval during market hours. |
 | `CHECK_INTERVAL_OFFHOURS_SECONDS` | `3600` | Local daemon scan interval outside market hours. |
-| `SNAPSHOT_HOURS` | `12` | Comma-separated full-snapshot hours in `MARKET_TIMEZONE`. |
-| `SNAPSHOT_WINDOW_MINUTES` | `45` | Grace window for scheduled full snapshots and open/close snapshots. |
+| `SNAPSHOT_HOURS` | empty | Optional comma-separated intraday full-snapshot hours in `MARKET_TIMEZONE`. GitHub Actions sets this empty by default. |
+| `SNAPSHOT_WINDOW_MINUTES` | `45` | Grace window for open/close fallback snapshots. |
 | `HEADLESS` | `true` | Runs Chromium in headless mode. |
 | `SEND_INITIAL_BASELINE` | `false` | If true, sends the full list when no previous state exists. |
 | `PERSIST_LAST_SEEN` | `true` | If false, unchanged scans do not modify state timestamps. Useful for GitHub Actions. |
@@ -174,7 +174,7 @@ The workflow supports:
 
 - Market-hours change scans every 15 minutes.
 - Off-hours change scans every hour.
-- Full snapshots at market open, market close, and the configured daily snapshot hour, defaulting to `12:00` in `MARKET_TIMEZONE`.
+- Full snapshots at market open and market close.
 - Manual runs through `workflow_dispatch`.
 - Repository state commits so each GitHub Actions run can compare against the previous snapshot.
 
@@ -211,7 +211,6 @@ STATE_FILE=state/watchlist_<watchlist-id>.json
 MARKET_TIMEZONE=America/New_York
 MARKET_OPEN=09:30
 MARKET_CLOSE=16:00
-SNAPSHOT_HOURS=12
 SNAPSHOT_WINDOW_MINUTES=45
 TELEGRAM_DISABLE_WEB_PAGE_PREVIEW=false
 ```
@@ -220,24 +219,31 @@ If `WATCHLIST_URL` is not set, the workflow fails with a clear configuration err
 
 ### Schedule
 
-The workflow uses two cron schedules:
+The workflow uses dedicated full-list cron triggers plus regular scan triggers:
 
 ```yaml
-- cron: "*/15 13-21 * * 1-5"
-- cron: "0 * * * *"
+- cron: "30 13 * * 1-5"
+- cron: "30 14 * * 1-5"
+- cron: "0 20 * * 1-5"
+- cron: "0 21 * * 1-5"
+- cron: "5,20,35,50 13-21 * * 1-5"
+- cron: "5 * * * *"
 ```
 
-GitHub cron schedules run in UTC. The Python code converts the current time to `MARKET_TIMEZONE` and applies the final rules:
+GitHub cron schedules run in UTC. Full-list triggers include both daylight-time and standard-time UTC hours; the Python code converts the target time through `MARKET_TIMEZONE` and only accepts the UTC cron that matches the current date. For the default `America/New_York` settings, that means:
+
+- Market open full list: `09:30 ET`.
+- Market close full list: `16:00 ET`.
+
+Regular scan rules:
 
 - `market` mode scans only during `09:30-16:00`.
 - `offhours` mode scans only outside regular market hours.
-- The first scan inside the open window sends a full market-open snapshot.
-- The first scan inside the close window sends a full market-close snapshot.
-- The configured daily snapshot hour defaults to `12:00`.
+- Regular scans are offset from `:00` and `:30` so they do not compete with dedicated full-list runs.
 - All other scheduled scans send a notification only when symbols are added or removed.
 - `always` mode is available for manual runs.
 
-GitHub Actions scheduled workflows can be delayed by GitHub's queue. Increase `SNAPSHOT_WINDOW_MINUTES` if you want a wider grace window.
+GitHub Actions scheduled workflows can be delayed by GitHub's queue. The dedicated full-list triggers are based on the cron that fired, so a delayed open/close job can still send once for that Eastern-time trading day.
 
 ### Public Repository State
 
@@ -292,7 +298,7 @@ Run a scheduled-mode dry run:
 
 ```bash
 python -m tv_watchlist_monitor.watcher run-scheduled --mode market --dry-run
-python -m tv_watchlist_monitor.watcher run-scheduled --mode snapshot --dry-run
+python -m tv_watchlist_monitor.watcher run-triggered-full --label open --schedule "30 13 * * 1-5" --dry-run
 ```
 
 Inspect the current state:

@@ -10,7 +10,7 @@ import urllib.error
 import urllib.request
 from collections import defaultdict
 from dataclasses import dataclass
-from datetime import date, datetime, time as dtime, timedelta
+from datetime import date, datetime, time as dtime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
@@ -820,6 +820,10 @@ def periodic_snapshot_marker(now: datetime) -> str:
     return f"{now.date().isoformat()}T{now.hour:02d}"
 
 
+def periodic_snapshot_marker_for_hour(day: date, hour: int) -> str:
+    return f"{day.isoformat()}T{hour:02d}"
+
+
 def is_periodic_snapshot_window(config: Config, now: datetime) -> bool:
     return now.hour in config.snapshot_hours and now.minute < config.snapshot_window_minutes
 
@@ -963,6 +967,78 @@ def run_snapshot(config: Config) -> Dict[str, Any]:
     save_state(config.state_file, state)
     return {"items": len(items), "added": len(added), "removed": len(removed), "snapshots": due_labels}
 
+
+def normalize_cron(value: str) -> str:
+    return " ".join(value.split())
+
+
+def utc_cron_for_local_time(config: Config, local_day: date, local_time: dtime) -> Optional[str]:
+    if ZoneInfo is None:
+        return None
+    local_dt = datetime.combine(local_day, local_time, tzinfo=ZoneInfo(config.market_timezone))
+    utc_dt = local_dt.astimezone(timezone.utc)
+    return f"{utc_dt.minute} {utc_dt.hour} * * 1-5"
+
+
+def schedule_matches_local_time(config: Config, schedule: str, now: datetime, local_time: dtime) -> bool:
+    expected = utc_cron_for_local_time(config, now.date(), local_time)
+    return bool(expected) and normalize_cron(schedule) == expected
+
+
+def scheduled_snapshot_hour(config: Config, schedule: str, now: datetime) -> Optional[int]:
+    for hour in config.snapshot_hours:
+        if schedule_matches_local_time(config, schedule, now, dtime(hour=hour)):
+            return hour
+    return None
+
+
+def run_triggered_full(config: Config, label: str, schedule: str = "") -> Dict[str, Any]:
+    now = now_in_market_tz(config)
+    state = load_state(config.state_file)
+    due = False
+    marker_key = ""
+    marker_value = ""
+
+    if label == "open":
+        marker_key = "open_full_sent"
+        marker_value = now.date().isoformat()
+        due = (
+            is_weekday_trading_day(now.date())
+            and marker_value not in set(state.get(marker_key, []))
+            and (schedule_matches_local_time(config, schedule, now, config.market_open) if schedule else should_send_open_full(config, state, now))
+        )
+    elif label == "close":
+        marker_key = "close_full_sent"
+        marker_value = now.date().isoformat()
+        due = (
+            is_weekday_trading_day(now.date())
+            and marker_value not in set(state.get(marker_key, []))
+            and (schedule_matches_local_time(config, schedule, now, config.market_close) if schedule else is_close_snapshot_due(config, state, now))
+        )
+    elif label == "snapshot":
+        marker_key = "periodic_full_sent"
+        if schedule:
+            snapshot_hour = scheduled_snapshot_hour(config, schedule, now)
+        else:
+            snapshot_hour = now.hour if is_periodic_snapshot_window(config, now) else None
+        if snapshot_hour is not None:
+            marker_value = periodic_snapshot_marker_for_hour(now.date(), snapshot_hour)
+            due = marker_value not in set(state.get(marker_key, []))
+    else:
+        raise ValueError(f"Unsupported full-list label: {label}")
+
+    if not due:
+        print(f"Skipping triggered full list; label={label} schedule={schedule or '<none>'} time={now.isoformat()}")
+        return {"skipped": True, "mode": "triggered-full", "label": label}
+
+    items = fetch_watchlist(config)
+    added, removed, _ = diff_items(state, items)
+    send_messages(config, build_full_message(config, items, label, now, len(added), len(removed)))
+    mark_sent_value(state, marker_key, marker_value)
+    update_state_snapshot(config, state, items, now)
+    save_state(config.state_file, state)
+    return {"items": len(items), "added": len(added), "removed": len(removed), "snapshot": label}
+
 def should_run_scheduled_mode(config: Config, mode: str, now: Optional[datetime] = None) -> bool:
     now = now or now_in_market_tz(config)
     market_open = is_market_open_now(config, now)
@@ -1054,6 +1130,11 @@ def build_parser() -> argparse.ArgumentParser:
     scheduled.add_argument("--mode", choices=["always", "market", "offhours", "snapshot"], default=os.getenv("SCHEDULE_MODE", "always"))
     scheduled.add_argument("--dry-run", action="store_true", help="Print notification messages instead of sending them.")
 
+    triggered_full = subparsers.add_parser("run-triggered-full", help="Send a full list when its cron trigger matches the market timezone.")
+    triggered_full.add_argument("--label", choices=["open", "close", "snapshot"], required=True)
+    triggered_full.add_argument("--schedule", default=os.getenv("GITHUB_EVENT_SCHEDULE", ""))
+    triggered_full.add_argument("--dry-run", action="store_true", help="Print notification messages instead of sending them.")
+
     full = subparsers.add_parser("send-full", help="Fetch and send the full watchlist now.")
     full.add_argument("--label", choices=["open", "close", "test", "baseline"], default="test")
     full.add_argument("--dry-run", action="store_true", help="Print notification messages instead of sending them.")
@@ -1074,6 +1155,8 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
             run_daemon(config)
         elif args.command == "run-scheduled":
             run_scheduled(config, args.mode)
+        elif args.command == "run-triggered-full":
+            run_triggered_full(config, args.label, args.schedule)
         else:  # pragma: no cover
             parser.error(f"Unknown command: {args.command}")
     except Exception as exc:

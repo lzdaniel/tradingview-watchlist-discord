@@ -11,16 +11,21 @@ on:
         options:
           - always
           - market
-          - snapshot
           - offhours
   schedule:
+    # Open/close full-list snapshots. GitHub cron is UTC; both UTC hours are listed so
+    # Python can pick the one that matches America/New_York in DST or standard time.
+    - cron: "30 13 * * 1-5"
+    - cron: "30 14 * * 1-5"
+    - cron: "0 20 * * 1-5"
+    - cron: "0 21 * * 1-5"
     # Market scanner: every 15 minutes around possible US regular hours.
     # Python checks America/New_York and only scans during 09:30-16:00.
-    - cron: "*/15 13-21 * * 1-5"
+    - cron: "5,20,35,50 13-21 * * 1-5"
     # Off-hours scanner: wakes hourly. Python skips regular market hours;
-    # outside regular hours it sends only added/removed changes, except full
-    # snapshots at the close window and configured daily snapshot hour.
-    - cron: "0 * * * *"
+    # outside regular hours it sends only added/removed changes, except the
+    # close full-list fallback window.
+    - cron: "5 * * * *"
 
 permissions:
   contents: write
@@ -46,7 +51,7 @@ jobs:
       MARKET_TIMEZONE: ${{ vars.MARKET_TIMEZONE || 'America/New_York' }}
       MARKET_OPEN: ${{ vars.MARKET_OPEN || '09:30' }}
       MARKET_CLOSE: ${{ vars.MARKET_CLOSE || '16:00' }}
-      SNAPSHOT_HOURS: ${{ vars.SNAPSHOT_HOURS || '12' }}
+      SNAPSHOT_HOURS: ""
       SNAPSHOT_WINDOW_MINUTES: ${{ vars.SNAPSHOT_WINDOW_MINUTES || '45' }}
       HEADLESS: "true"
       SEND_INITIAL_BASELINE: "false"
@@ -82,14 +87,30 @@ jobs:
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo "mode=${{ inputs.mode }}" >> "$GITHUB_OUTPUT"
-          elif [[ "${{ github.event.schedule }}" == "*/15 13-21 * * 1-5" ]]; then
+          elif [[ "${{ github.event.schedule }}" == "30 13 * * 1-5" || "${{ github.event.schedule }}" == "30 14 * * 1-5" ]]; then
+            echo "mode=full-open" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ github.event.schedule }}" == "0 20 * * 1-5" || "${{ github.event.schedule }}" == "0 21 * * 1-5" ]]; then
+            echo "mode=full-close" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ github.event.schedule }}" == "5,20,35,50 13-21 * * 1-5" ]]; then
             echo "mode=market" >> "$GITHUB_OUTPUT"
           else
             echo "mode=offhours" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Run watcher
-        run: python -m tv_watchlist_monitor.watcher run-scheduled --mode "${{ steps.mode.outputs.mode }}"
+        shell: bash
+        run: |
+          case "${{ steps.mode.outputs.mode }}" in
+            full-open)
+              python -m tv_watchlist_monitor.watcher run-triggered-full --label open --schedule "${{ github.event.schedule }}"
+              ;;
+            full-close)
+              python -m tv_watchlist_monitor.watcher run-triggered-full --label close --schedule "${{ github.event.schedule }}"
+              ;;
+            *)
+              python -m tv_watchlist_monitor.watcher run-scheduled --mode "${{ steps.mode.outputs.mode }}"
+              ;;
+          esac
 
       - name: Commit state changes
         shell: bash
