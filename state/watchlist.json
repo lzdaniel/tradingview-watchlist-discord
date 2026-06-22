@@ -122,13 +122,6 @@
     },
     {
       "category": "SWINGING",
-      "description": "Taiyo Yuden Co., Ltd.",
-      "exchange": "TSE",
-      "symbol": "TSE:6976",
-      "ticker": "6976"
-    },
-    {
-      "category": "SWINGING",
       "description": "Murata Manufacturing Co., Ltd.",
       "exchange": "TSE",
       "symbol": "TSE:6981",
@@ -175,13 +168,6 @@
       "exchange": "AMEX",
       "symbol": "AMEX:OIH",
       "ticker": "OIH"
-    },
-    {
-      "category": "WATCHLIST",
-      "description": "State Street Energy Select Sector SPDR ETF",
-      "exchange": "AMEX",
-      "symbol": "AMEX:XLE",
-      "ticker": "XLE"
     },
     {
       "category": "WATCHLIST",
@@ -301,6 +287,13 @@
       "exchange": "NASDAQ",
       "symbol": "NASDAQ:CENX",
       "ticker": "CENX"
+    },
+    {
+      "category": "WATCHLIST",
+      "description": "CEVA, Inc.",
+      "exchange": "NASDAQ",
+      "symbol": "NASDAQ:CEVA",
+      "ticker": "CEVA"
     },
     {
       "category": "WATCHLIST",
@@ -717,13 +710,6 @@
     },
     {
       "category": "WATCHLIST",
-      "description": "Nitto Boseki Co., Ltd.",
-      "exchange": "TSE",
-      "symbol": "TSE:3110",
-      "ticker": "3110"
-    },
-    {
-      "category": "WATCHLIST",
       "description": "Asahi Kasei Corporation",
       "exchange": "TSE",
       "symbol": "TSE:3407",
@@ -756,6 +742,13 @@
       "exchange": "TSE",
       "symbol": "TSE:6963",
       "ticker": "6963"
+    },
+    {
+      "category": "WATCHLIST",
+      "description": "Taiyo Yuden Co., Ltd.",
+      "exchange": "TSE",
+      "symbol": "TSE:6976",
+      "ticker": "6976"
     }
   ],
   "open_full_sent": [],
