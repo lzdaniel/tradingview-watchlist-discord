@@ -3,6 +3,13 @@
   "items": [
     {
       "category": "SWINGING",
+      "description": "Kingboard Laminates Holdings Limited",
+      "exchange": "HKEX",
+      "symbol": "HKEX:1888",
+      "ticker": "1888"
+    },
+    {
+      "category": "SWINGING",
       "description": "SK hynix Inc.",
       "exchange": "KRX",
       "symbol": "KRX:000660",
@@ -94,6 +101,20 @@
     },
     {
       "category": "SWINGING",
+      "description": "JX Advanced Metals Corporation",
+      "exchange": "TSE",
+      "symbol": "TSE:5016",
+      "ticker": "5016"
+    },
+    {
+      "category": "SWINGING",
+      "description": "Mitsui Kinzoku Co., Ltd.",
+      "exchange": "TSE",
+      "symbol": "TSE:5706",
+      "ticker": "5706"
+    },
+    {
+      "category": "SWINGING",
       "description": "Kokusai Electric Corporation",
       "exchange": "TSE",
       "symbol": "TSE:6525",
@@ -175,13 +196,6 @@
       "exchange": "CBOE",
       "symbol": "CBOE:ITB",
       "ticker": "ITB"
-    },
-    {
-      "category": "WATCHLIST",
-      "description": "Kingboard Laminates Holdings Limited",
-      "exchange": "HKEX",
-      "symbol": "HKEX:1888",
-      "ticker": "1888"
     },
     {
       "category": "WATCHLIST",
@@ -714,20 +728,6 @@
       "exchange": "TSE",
       "symbol": "TSE:4182",
       "ticker": "4182"
-    },
-    {
-      "category": "WATCHLIST",
-      "description": "JX Advanced Metals Corporation",
-      "exchange": "TSE",
-      "symbol": "TSE:5016",
-      "ticker": "5016"
-    },
-    {
-      "category": "WATCHLIST",
-      "description": "Mitsui Kinzoku Co., Ltd.",
-      "exchange": "TSE",
-      "symbol": "TSE:5706",
-      "ticker": "5706"
     },
     {
       "category": "WATCHLIST",
