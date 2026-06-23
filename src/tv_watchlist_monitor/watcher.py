@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import html as html_lib
 import json
 import os
 import re
@@ -350,8 +351,105 @@ def fetch_watchlist(config: Config) -> List[WatchItem]:
     base_items = json_items if json_items else dom_items
     items = enrich_items_from_rendered_text(dedupe_items(base_items), dom_items)
     if not items:
-        raise RuntimeError("No watchlist symbols were extracted. TradingView may have changed the page or may require login.")
+        items = fetch_watchlist_from_initial_html(config)
+    if not items:
+        raise RuntimeError("No watchlist symbols were extracted. TradingView may have changed the page, blocked GitHub Actions, or may require login.")
     return items
+
+
+def fetch_watchlist_from_initial_html(config: Config) -> List[WatchItem]:
+    request = urllib.request.Request(
+        config.watchlist_url,
+        headers={
+            "User-Agent": (
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36"
+            ),
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Cache-Control": "no-cache",
+        },
+        method="GET",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=30) as response:
+            body = response.read().decode("utf-8", errors="replace")
+    except urllib.error.HTTPError as exc:
+        print(f"Initial HTML fallback failed: HTTP {exc.code}")
+        return []
+    except urllib.error.URLError as exc:
+        print(f"Initial HTML fallback failed: {exc.reason}")
+        return []
+
+    items = extract_items_from_initial_html(body)
+    if items:
+        print(f"Initial HTML fallback extracted {len(items)} symbols.")
+    else:
+        print(f"Initial HTML fallback found no symbols. html_bytes={len(body.encode('utf-8'))}")
+    return items
+
+
+def extract_items_from_initial_html(body: str) -> List[WatchItem]:
+    payloads = re.findall(
+        r'<script[^>]+type=["\']application/prs\.init-data\+json["\'][^>]*>(.*?)</script>',
+        body,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    for raw_payload in payloads:
+        payload_text = html_lib.unescape(raw_payload).strip()
+        try:
+            payload = json.loads(payload_text)
+        except json.JSONDecodeError:
+            continue
+        items = extract_shared_watchlist_items(payload)
+        if items:
+            return items
+    return []
+
+
+def extract_shared_watchlist_items(node: Any) -> List[WatchItem]:
+    if isinstance(node, dict):
+        shared = node.get("sharedWatchlist")
+        if isinstance(shared, dict):
+            watchlist = shared.get("list")
+            if isinstance(watchlist, dict):
+                symbols = watchlist.get("symbols")
+                if isinstance(symbols, list):
+                    return items_from_sectioned_symbols(symbols)
+        for value in node.values():
+            items = extract_shared_watchlist_items(value)
+            if items:
+                return items
+    elif isinstance(node, list):
+        for value in node:
+            items = extract_shared_watchlist_items(value)
+            if items:
+                return items
+    return []
+
+
+def items_from_sectioned_symbols(symbols: Sequence[Any]) -> List[WatchItem]:
+    items: List[WatchItem] = []
+    category = UNCATEGORIZED
+    for raw in symbols:
+        if not isinstance(raw, str):
+            continue
+        value = raw.strip()
+        if value.startswith("###"):
+            category = clean_category(value.lstrip("#"))
+            continue
+        if not is_probable_symbol(value):
+            continue
+        exchange, ticker = split_symbol(value)
+        items.append(
+            WatchItem(
+                symbol=f"{exchange}:{ticker}" if exchange else ticker,
+                ticker=ticker,
+                exchange=exchange,
+                category=category,
+            )
+        )
+    return dedupe_items(items)
 
 
 def scroll_page_to_bottom(page: Any) -> None:
@@ -845,10 +943,28 @@ def is_close_snapshot_due(config: Config, state: Dict[str, Any], now: datetime) 
 
 
 def update_state_snapshot(config: Config, state: Dict[str, Any], items: Sequence[WatchItem], now: datetime) -> None:
+    previous_items = [WatchItem.from_dict(item) for item in state.get("items", [])]
+    previous = item_map(previous_items)
+    merged_items: List[WatchItem] = []
+    for item in items:
+        prior = previous.get(item.symbol)
+        if prior:
+            merged_items.append(
+                WatchItem(
+                    symbol=item.symbol,
+                    ticker=item.ticker,
+                    exchange=item.exchange,
+                    category=prior.category if item.category == UNCATEGORIZED else item.category,
+                    description=item.description or prior.description,
+                )
+            )
+        else:
+            merged_items.append(item)
+
     state_update = {
         "source_url": config.watchlist_url,
         "watchlist_name": config.watchlist_name,
-        "items": [item.as_dict() for item in items],
+        "items": [item.as_dict() for item in merged_items],
     }
     if config.persist_last_seen:
         state_update["last_seen_at"] = now.isoformat()
