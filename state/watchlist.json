@@ -334,6 +334,13 @@
     },
     {
       "category": "WATCHLIST",
+      "description": "Kulicke and Soffa Industries, Inc.",
+      "exchange": "NASDAQ",
+      "symbol": "NASDAQ:KLIC",
+      "ticker": "KLIC"
+    },
+    {
+      "category": "WATCHLIST",
       "description": "Lumentum Holdings Inc.",
       "exchange": "NASDAQ",
       "symbol": "NASDAQ:LITE",
