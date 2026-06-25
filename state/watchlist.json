@@ -532,6 +532,13 @@
     },
     {
       "category": "WATCHLIST",
+      "description": "ASE Technology Holding Co., Ltd.",
+      "exchange": "NYSE",
+      "symbol": "NYSE:ASX",
+      "ticker": "ASX"
+    },
+    {
+      "category": "WATCHLIST",
       "description": "ATI Inc.",
       "exchange": "NYSE",
       "symbol": "NYSE:ATI",
