@@ -127,13 +127,6 @@
     },
     {
       "category": "SWINGING",
-      "description": "ON Semiconductor Corporation",
-      "exchange": "NASDAQ",
-      "symbol": "NASDAQ:ON",
-      "ticker": "ON"
-    },
-    {
-      "category": "SWINGING",
       "description": "Penguin Solutions, Inc.",
       "exchange": "NASDAQ",
       "symbol": "NASDAQ:PENG",
@@ -145,6 +138,13 @@
       "exchange": "NASDAQ",
       "symbol": "NASDAQ:QCOM",
       "ticker": "QCOM"
+    },
+    {
+      "category": "SWINGING",
+      "description": "Invesco QQQ Trust, Series 1",
+      "exchange": "NASDAQ",
+      "symbol": "NASDAQ:QQQ",
+      "ticker": "QQQ"
     },
     {
       "category": "SWINGING",
@@ -173,6 +173,13 @@
       "exchange": "NYSE",
       "symbol": "NYSE:DELL",
       "ticker": "DELL"
+    },
+    {
+      "category": "SWINGING",
+      "description": "Snowflake Inc.",
+      "exchange": "NYSE",
+      "symbol": "NYSE:SNOW",
+      "ticker": "SNOW"
     },
     {
       "category": "SWINGING",
@@ -456,6 +463,13 @@
     },
     {
       "category": "WATCHLIST",
+      "description": "ON Semiconductor Corporation",
+      "exchange": "NASDAQ",
+      "symbol": "NASDAQ:ON",
+      "ticker": "ON"
+    },
+    {
+      "category": "WATCHLIST",
       "description": "Hyperliquid Strategies Inc",
       "exchange": "NASDAQ",
       "symbol": "NASDAQ:PURR",
@@ -666,13 +680,6 @@
     },
     {
       "category": "WATCHLIST",
-      "description": "Snowflake Inc.",
-      "exchange": "NYSE",
-      "symbol": "NYSE:SNOW",
-      "ticker": "SNOW"
-    },
-    {
-      "category": "WATCHLIST",
       "description": "Taiwan Semiconductor Manufacturing Company Ltd.",
       "exchange": "NYSE",
       "symbol": "NYSE:TSM",
@@ -793,7 +800,8 @@
   ],
   "open_full_sent": [
     "2026-06-24",
-    "2026-06-25"
+    "2026-06-25",
+    "2026-06-26"
   ],
   "source_url": "https://www.tradingview.com/watchlists/326877343/",
   "watchlist_name": "TradingView Watchlist"
