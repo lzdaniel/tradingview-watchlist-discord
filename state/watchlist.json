@@ -234,6 +234,13 @@
     },
     {
       "category": "SWINGING",
+      "description": "Vishay Intertechnology, Inc.",
+      "exchange": "NYSE",
+      "symbol": "NYSE:VSH",
+      "ticker": "VSH"
+    },
+    {
+      "category": "SWINGING",
       "description": "Nan Ya Plastics Corporation",
       "exchange": "TWSE",
       "symbol": "TWSE:1303",
@@ -749,13 +756,6 @@
       "exchange": "NYSE",
       "symbol": "NYSE:TSM",
       "ticker": "TSM"
-    },
-    {
-      "category": "WATCHLIST",
-      "description": "Vishay Intertechnology, Inc.",
-      "exchange": "NYSE",
-      "symbol": "NYSE:VSH",
-      "ticker": "VSH"
     },
     {
       "category": "WATCHLIST",
