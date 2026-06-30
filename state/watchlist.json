@@ -605,6 +605,13 @@
     },
     {
       "category": "WATCHLIST",
+      "description": "Bristol-Myers Squibb Company",
+      "exchange": "NYSE",
+      "symbol": "NYSE:BMY",
+      "ticker": "BMY"
+    },
+    {
+      "category": "WATCHLIST",
       "description": "Ciena Corporation",
       "exchange": "NYSE",
       "symbol": "NYSE:CIEN",
@@ -693,6 +700,13 @@
       "exchange": "NYSE",
       "symbol": "NYSE:NOK",
       "ticker": "NOK"
+    },
+    {
+      "category": "WATCHLIST",
+      "description": "Onto Innovation Inc.",
+      "exchange": "NYSE",
+      "symbol": "NYSE:ONTO",
+      "ticker": "ONTO"
     },
     {
       "category": "WATCHLIST",
