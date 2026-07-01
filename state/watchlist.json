@@ -53,13 +53,6 @@
     },
     {
       "category": "SWINGING",
-      "description": "AST SpaceMobile, Inc.",
-      "exchange": "NASDAQ",
-      "symbol": "NASDAQ:ASTS",
-      "ticker": "ASTS"
-    },
-    {
-      "category": "SWINGING",
       "description": "Credo Technology Group Holding Ltd",
       "exchange": "NASDAQ",
       "symbol": "NASDAQ:CRDO",
@@ -99,13 +92,6 @@
       "exchange": "NASDAQ",
       "symbol": "NASDAQ:KLAC",
       "ticker": "KLAC"
-    },
-    {
-      "category": "SWINGING",
-      "description": "Lam Research Corporation",
-      "exchange": "NASDAQ",
-      "symbol": "NASDAQ:LRCX",
-      "ticker": "LRCX"
     },
     {
       "category": "SWINGING",
@@ -389,6 +375,13 @@
     },
     {
       "category": "WATCHLIST",
+      "description": "AST SpaceMobile, Inc.",
+      "exchange": "NASDAQ",
+      "symbol": "NASDAQ:ASTS",
+      "ticker": "ASTS"
+    },
+    {
+      "category": "WATCHLIST",
       "description": "Broadcom Inc.",
       "exchange": "NASDAQ",
       "symbol": "NASDAQ:AVGO",
@@ -522,6 +515,13 @@
     },
     {
       "category": "WATCHLIST",
+      "description": "Lam Research Corporation",
+      "exchange": "NASDAQ",
+      "symbol": "NASDAQ:LRCX",
+      "ticker": "LRCX"
+    },
+    {
+      "category": "WATCHLIST",
       "description": "MKS Inc.",
       "exchange": "NASDAQ",
       "symbol": "NASDAQ:MKSI",
@@ -568,6 +568,13 @@
       "exchange": "NASDAQ",
       "symbol": "NASDAQ:SHOP",
       "ticker": "SHOP"
+    },
+    {
+      "category": "WATCHLIST",
+      "description": "VanEck Semiconductor ETF",
+      "exchange": "NASDAQ",
+      "symbol": "NASDAQ:SMH",
+      "ticker": "SMH"
     },
     {
       "category": "WATCHLIST",
@@ -645,13 +652,6 @@
       "exchange": "NYSE",
       "symbol": "NYSE:ATI",
       "ticker": "ATI"
-    },
-    {
-      "category": "WATCHLIST",
-      "description": "Bristol-Myers Squibb Company",
-      "exchange": "NYSE",
-      "symbol": "NYSE:BMY",
-      "ticker": "BMY"
     },
     {
       "category": "WATCHLIST",
