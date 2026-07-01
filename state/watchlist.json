@@ -193,13 +193,6 @@
     },
     {
       "category": "SWINGING",
-      "description": "Snowflake Inc.",
-      "exchange": "NYSE",
-      "symbol": "NYSE:SNOW",
-      "ticker": "SNOW"
-    },
-    {
-      "category": "SWINGING",
       "description": "Vishay Intertechnology, Inc.",
       "exchange": "NYSE",
       "symbol": "NYSE:VSH",
@@ -764,6 +757,13 @@
       "exchange": "NYSE",
       "symbol": "NYSE:RDW",
       "ticker": "RDW"
+    },
+    {
+      "category": "WATCHLIST",
+      "description": "Snowflake Inc.",
+      "exchange": "NYSE",
+      "symbol": "NYSE:SNOW",
+      "ticker": "SNOW"
     },
     {
       "category": "WATCHLIST",
